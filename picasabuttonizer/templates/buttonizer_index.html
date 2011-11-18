@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Picasa Buttonizer
+{% endblock %}
+{% block main %}
+    <div class="grid_6">
+        {% if not buttons %}
+            <h2>You have not yet any button</h2>
+            <p>Even you haven't an account on this site, you can
+                create your buttons. They are accessible until the session
+                expires.</p>
+            <p>
+                Registered users can create until 5 buttons.
+            </p>
+        {% else %}
+            <h2>You have {{ buttons|length }} button{{ buttons|pluralize }}</h2>
+            {% for button in buttons %}
+                <p><h3>{{ button.name }}</h3>
+                <a href="/buttonizer/button/edit/{{ button.guid }}">edit</a>
+                <a href="/buttonizer/button/get/{{ button.guid }}">download</a>
+                <a href="/buttonizer/button/remove/{{ button.guid }}">remove</a>
+                </p>
+            {% endfor %}
+
+        {% endif %}
+    </div>
+    <div class="grid_10">
+        <h2>Create new button</h2>
+
+        <form action="/buttonizer/{{ edit_url }}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <p>
+                {{ form.non_field_errors }}
+            </p>
+
+            <p>
+                <label for="id_name">Name</label>
+            </p>
+
+            <p>{{ form.name.errors }}
+                {{ form.name }}
+            </p>
+
+            <p><label for="id_icon">Icon</label></p>
+            <p>
+                {{ form.icon.errors }}
+                {{ form.icon }}
+            </p>
+            <p>
+                <label for="id_icon_name">Icon name</label>
+            </p>
+            <p>{{ form.icon_name.errors }}
+                {{ form.icon_name }}
+            </p>
+            <p>
+                {{ form.label.errors }}
+                <label for="id_label">Label</label>
+            </p>
+            <p>
+                {{ form.label }}</p>
+            <p>
+                <label for="id_tooltip">Tooltip</label>
+            </p>
+            <p>
+                {{ form.tooltip.errors }}
+                {{ form.tooltip }}
+            </p>
+            <p>
+                <label for="id_hybrid_uploader_url">Hybrid uploader url</label></p>
+            <p>
+                {{ form.hybrid_uploader_url.errors }}
+                {{ form.hybrid_uploader_url }}
+            </p>
+            <p>
+                <br />
+                <input type="submit" value="Submit"/>
+            </p>
+        </form>
+
+        <p>
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+    </div>
+{% endblock %}
