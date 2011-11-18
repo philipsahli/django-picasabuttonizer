@@ -1,9 +1,3 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
 from django.contrib.auth.models import User
 from django.core.files.base import File
 from django.db.models.fields.files import FileField
@@ -17,13 +11,6 @@ from buttonizer import Buttonizer
 from models import Button
 
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
-
 class ButtonizerTest(TestCase):
     user = None
     button = None
@@ -32,7 +19,9 @@ class ButtonizerTest(TestCase):
         self.user.set_password("asdf")
         self.user.save()
 
-        icon = open("picasabuttonizer/test_files/icon.psd")
+        p = os.path.dirname(os.path.abspath(__file__))
+
+        icon = open(os.path.join(p, "test_files/icon.psd"))
         f_icon = File(icon)
 
         self.button = Button(
