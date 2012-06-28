@@ -1,5 +1,4 @@
 # Create your views here.
-import StringIO
 import django
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
@@ -8,19 +7,39 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from buttonizer import Buttonizer
-from models import Button
-from forms import ButtonForm
+from picasabuttonizer.forms import HybridButtonForm, TrayexecButtonForm, OpenButtonForm
+from picasabuttonizer.models import Button, HybridButton, TrayexecButton, OpenButton
 
-def index_handle(request, guid=None):
-    edit_url = ""
-    if "edit" in request.GET:
-        guid=request.GET.__getitem__('edit')
+def _model_form_type(type, model=None, form=None):
+    if type == "hybrid":
+        form = HybridButtonForm
+        model = HybridButton
+    if type == "exec":
+        form = TrayexecButtonForm
+        model = TrayexecButton
+    if type == "open":
+        form = OpenButtonForm
+        model = OpenButton
+    return form, model
+
+
+def new_button(request, type):
+    return {'form': _model_form_type(type)[0], 'type': type}
+
+
+def index_handle(request, guid=None, type=None):
+    print request.GET.items()
+
+    form, model = _model_form_type(type)
+    print form, model
+
     if request.method == 'POST':
+        print "POST"
         try:
             instance = Button.objects.get(guid=guid)
-            form = ButtonForm(request.POST, request.FILES, instance=instance)
-        except Button.DoesNotExist:
-            form = ButtonForm(request.POST, request.FILES)
+            form = form(request.POST, request.FILES, instance=instance)
+        except model.DoesNotExist:
+            form = form(request.POST, request.FILES)
         if form.is_valid():
             button = form.save(commit=False)
             if not isinstance(request.user, AnonymousUser):
@@ -33,29 +52,34 @@ def index_handle(request, guid=None):
                 session_buttons.append(button.guid)
                 request.session['buttons'] = session_buttons
             messages.info(request, "Saved")
+            print button
             return HttpResponseRedirect("/buttonizer/")
-    else:
-        if not guid:
-            form = ButtonForm()
         else:
-            form = ButtonForm(instance=Button.objects.get(guid=guid))
-            edit_url = guid
+            print form.errors
+    else:
+        if type:
+            if not guid:
+                form = form()
+            else:
+                form = form(instance=Button.objects.get(guid=guid))
+        else:
+            # entry point
+            return
     if request.user.is_authenticated():
-        buttons = Button.objects.filter(user=request.user.id)
+        buttons = model.objects.filter(user=request.user.id)
     else:
         buttons = []
         for guid in request.session.get('buttons', []):
             try:
-                buttons.append(Button.objects.get(guid=guid))
-            except Button.DoesNotExist, e:
+                buttons.append(model.objects.get(guid=guid))
+            except model.DoesNotExist, e:
                 pass
 
-    #return {'form': form, 'buttons': buttons, 'edit_url': edit_url}, RequestContext(request)
-    return {'form': form, 'buttons': buttons, 'edit_url': edit_url}
+    return {'form': form, 'buttons': buttons}
 
 def index(request, guid=None):
     vars = index_handle(request, guid)
-    return render_to_response('pages/apps/buttonizer.html', vars, RequestContext(request))
+    return render_to_response('pages/buttonizer.html', vars, RequestContext(request))
 
 
 def remove_button(request, guid):

@@ -5,44 +5,35 @@ from lxml import etree
 from django.template.defaultfilters import slugify
 
 class Buttonizer:
+
     id = None
     s_guid = None
     label = None
     tooltip = None
     hybrid_uploader_url = None
-    def create(self, name, label, tooltip, psd, guid, hybrid_uploader_url):
-        self.label = label
-        self.tooltip = tooltip
-        self.hybrid_uploader_url = hybrid_uploader_url
-        self.s_guid = "{"+guid+"}"
-        self.id = self._slugged(name)+"/{"+guid+"}"
-        t_icon = self.id+".psd"
-        t_xml = self.id+".pbf"
+
+    def create(self, **kwargs):
+        self.label = kwargs['label']
+        self.tooltip = kwargs['tooltip']
+        psd = kwargs['psd']
+        self.id = self._slugged(kwargs['name'])+"/{"+kwargs['guid']+"}"
 
         f_xml = cStringIO.StringIO()
         f_xml.write(self._pbf_xml())
 
         f_button = cStringIO.StringIO()
-        wrapper = cStringIO.StringIO()
 
         button = zipfile.ZipFile(f_button, mode='w')
-        wrapper = codecs.getwriter("utf8")(f_button)
-        button.writestr(t_icon, psd.read())
-        button.writestr(t_xml, f_xml.getvalue())
+
+        button.writestr(self.id+".psd", psd.read())
+        button.writestr(self.id+".pbf", f_xml.getvalue())
         f_xml.close()
         button.close()
         f_button.flush()
         return f_button
 
     def create_for_buttonmodel(self, model):
-        button = self.create(
-            model.name,
-            model.label,
-            model.tooltip,
-            model.icon,
-            model.guid,
-            model.hybrid_uploader_url,
-        )
+        button = self.create(**model.__dict__)
         return self._button_name(model.name), button
 
     def _slugged(self, name):

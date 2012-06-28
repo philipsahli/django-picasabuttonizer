@@ -8,7 +8,7 @@ from django.test.client import Client
 from mezzanine.pages.models import Page
 import os
 from buttonizer import Buttonizer
-from models import Button
+from models import Button, HybridButton
 
 
 class ButtonizerTest(TestCase):
@@ -24,7 +24,7 @@ class ButtonizerTest(TestCase):
         icon = open(os.path.join(p, "test_files/icon.psd"))
         f_icon = File(icon)
 
-        self.button = Button(
+        self.button = HybridButton(
             name="Testbutton",
             user=self.user,
             icon=f_icon,
@@ -73,7 +73,7 @@ class ButtonizerTest(TestCase):
             }, follow=True)
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, "testbutton", count=1)
-        self.button = Button.objects.get(name="testbutton")
+        self.button = HybridButton.objects.get(name="testbutton")
         self.assertIsInstance(self.button, Button)
 
     def test_form_saved_and_redirect_anonymous(self):
