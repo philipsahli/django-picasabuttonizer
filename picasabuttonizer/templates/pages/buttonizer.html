@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load i18n label_tags %}
+
+{% block title %}
+    <h2>{% trans "Picasa Buttonizer"|labelize:"class=title_first" %}</h2>
+{% endblock %}
+
+{% block extra_head %}
+    <script type="text/javascript">
+        $(function() {
+            $("input:radio").click(radioClicked);
+        });
+        function radioClicked(e) {
+           var type = e.currentTarget.value;
+           $("#"+type).css('visibility', 'visible');
+           var action = $("form#picasabuttonizer").attr("action");
+            $("form#picasabuttonizer").attr("action", "/buttonizer/?edit=&type="+type+"/");
+        }
+
+    </script>
+{% endblock %}
+
+
+
+{% block main %}
+    <div class="grid_6">
+        {% if not buttons %}
+            <h2>You have not yet any button</h2>
+            <p>Even you haven't an account on this site, you can
+                create your buttons. They are accessible until the session
+                expires.</p>
+            <p>
+                Registered users can create until 5 buttons.
+            </p>
+        {% else %}
+            <h2>You have {{ buttons|length }} button{{ buttons|pluralize }}</h2>
+            {% for button in buttons %}
+                <p>
+                    <h3>{{ button.name }}</h3>
+                    <a href="/buttonizer/?action=edit&guid={{ button.guid }}">edit</a>
+                    <a href="/buttonizer/?get={{ button.guid }}">download</a>
+                    <a href="/buttonizer/?remove={{ button.guid }}">remove</a>
+                </p>
+            {% endfor %}
+
+        {% endif %}
+    </div>
+    <div class="grid_10">
+        <h2>Create new button</h2>
+
+        {# <form action="/buttonizer/{{ edit_url }}" method="POST" enctype="multipart/form-data"> #}
+        <h3>Type {{ type }}</h3>
+        {% if not form %}
+        <form action="/buttonizer/?action=new&guid={{ guid }}&" method="GET">
+
+            <input type="submit" name="type" value="hybrid">
+            <input type="submit" name="type" value="exec">
+            <input type="submit" name="type" value="open">
+        </form>
+        {% endif %}
+
+        {% if form %}
+    
+        <form action="/buttonizer/?action=edit" method="POST" enctype="multipart/form-data" id="picasabuttonizer">
+            {% csrf_token %}
+            <p>
+                {{ form.non_field_errors }}
+            </p>
+
+            <p>
+                <label for="id_name">Name</label>
+            </p>
+
+            <p>{{ form.name.errors }}
+                {{ form.name }}
+            </p>
+
+            <p><label for="id_icon">Icon</label></p>
+
+            <p>
+                {{ form.icon.errors }}
+                {{ form.icon }}
+            </p>
+
+            <p>
+                <label for="id_icon_name">Icon name</label>
+            </p>
+
+            <p>{{ form.icon_name.errors }}
+                {{ form.icon_name }}
+            </p>
+
+            <p>
+                {{ form.label.errors }}
+                <label for="id_label">Label</label>
+            </p>
+
+            <p>
+                {{ form.label }}
+            </p>
+
+            <p>
+                <label for="id_tooltip">Tooltip</label>
+            </p>
+
+            <p>
+                {{ form.tooltip.errors }}
+                {{ form.tooltip }}
+            </p>
+
+            {{ form.spec.errors }}
+            <p>
+                <label>{{ form.spec.label }}</label>
+            <p>
+                {{ form.spec }}
+
+            <p>
+                <input type="hidden" name="type" value="{{ type }}"/>
+                <input type="submit" value="Submit"/>
+            </p>
+        </form>
+
+        {% endif %}
+
+        <p>
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+    </div>
+{% endblock %}
